@@ -1,24 +1,24 @@
 // group student.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-/*Реалізувати клас Group, який працює з масивом студентів (Student* або Student**) 
-Обов?язкові поля: 
-- покажчик на одновимірний масив студентів (+getter для одного студента за індексом); 
-- кількість осіб у групі (int) (+getter (без сеттеру!)); 
-- назва групи (string) (+getter/setter) 
-- спеціалізація групи (enum або string) (+getter/setter); 
-- номер курсу (int) (+getter/setter). 
- 
-Обов?язкові методи: 
-- конструктор за замовчуванням (порожня група без студентів); 
-- конструктор із параметром типу Group& (створюється точна копія групи). 
- 
-Реалізувати такі методи: 
-- показ усіх студентів групи (спочатку - назва і спеціалізація групи, потім порядкові номери, прізвица в алфавітному порядку та імена студентів); 
-- додавання студента в групу; 
-- злиття двох груп; 
-- переведення студента з однієї групи в іншу; 
-- відрахування всіх студентів, які не склали сесію (є хоч один не складений іспит); 
-- відрахування одного студента з найгіршим середнім балом по Д3. 
+/*Реалізувати клас Group, який працює з масивом студентів (Student* або Student**)
+Обов?язкові поля:
+- покажчик на одновимірний масив студентів (+getter для одного студента за індексом);
+- кількість осіб у групі (int) (+getter (без сеттеру!));
+- назва групи (string) (+getter/setter)
+- спеціалізація групи (enum або string) (+getter/setter);
+- номер курсу (int) (+getter/setter).
+
+Обов?язкові методи:
+- конструктор за замовчуванням (порожня група без студентів);
+- конструктор із параметром типу Group& (створюється точна копія групи).
+
+Реалізувати такі методи:
+- показ усіх студентів групи (спочатку - назва і спеціалізація групи, потім порядкові номери, прізвица в алфавітному порядку та імена студентів);
+- додавання студента в групу;
+- злиття двох груп;
+- переведення студента з однієї групи в іншу;
+- відрахування всіх студентів, які не склали сесію (є хоч один не складений іспит);
+- відрахування одного студента з найгіршим середнім балом по Д3.
 
 Передбачити в класі Group наявність конструктора копіювання.
 Обов?язкове додавання поля-покажчика для масиву студентів у складі класу */
@@ -139,12 +139,13 @@ class Student
     string father_name;
     string address;
     string phone_number;
+    int home_task_average_rate;
     int age;
     DateTime birthday;
     DateTime study_start; // 25.10.1998 
 
     // TO DO:  
-
+   
     int* hometask_rates = nullptr;
     int hometask_rates_count = 0;
 
@@ -379,6 +380,11 @@ public:
         return hometask_rates_count;
     }
 
+    int GetHometaskAverageRate() const
+    {
+        return home_task_average_rate;
+    }
+
     /// <summary>
     /// This method involves adding a grade to the student's practice grade list, and the grade should be between 1 and 12 points
     /// </summary>
@@ -548,6 +554,7 @@ class Group
     string group_name;
     int course_number;
     string specialization;
+    int home_task_average_rate;
 
 public:
     Group()
@@ -559,6 +566,7 @@ public:
 
     Group(const Group& original)
     {
+        //this->home_task_average_rate = original.home_task_average_rate;
         this->course_number = original.course_number;
         this->specialization = original.specialization;
         this->group_name = original.group_name;
@@ -577,9 +585,9 @@ public:
         {
             for (int i = 0; i < students_count; i++)
             {
-                delete students[i]; 
+                delete students[i];
             }
-            delete[] students; 
+            delete[] students;
         }
     }
 
@@ -656,7 +664,64 @@ public:
         students_count++;
     }
 
+    Student GetStudentByIndex(unsigned int index) const
+    {
+        if (index < students_count)
+        {
+            return *students[index];
+        }
+        else
+        {
+            cout << "Index out of bounds when accessing student array." << endl;
+            throw "ERROR!";
+        }
+    }
+
+    void RemoveStudentWithMinHomeworkAverage()
+    {
+        if (students_count == 0)
+        {
+            cout << "Group is empty. Cannot remove a student." << endl;
+            return;
+        }
+
+        int lowestIndex = 0;
+        double lowestAverage = students[0]->GetHometaskAverageRate(); // 7) теперь тут красивый вызов метода из класса Студент :)
+
+        for (int i = 1; i < students_count; i++)
+        {
+            double currentAverage = students[i]->GetHometaskAverageRate();
+            if (currentAverage < lowestAverage)
+            {
+                lowestAverage = currentAverage;
+                lowestIndex = i;
+            }
+        }
+
+        for (int i = lowestIndex; i < students_count - 1; i++)
+        {
+            students[i] = students[i + 1];
+        }
+        students_count--;
+
+        //cout << "Removed student with the lowest homework average." << endl;
+    }
+
     void GroupMerger(Group& another_group)
+    {
+        for (int i = 0; i < another_group.StudentsCount(); i++)
+        {
+            this->AddStudent(another_group.GetStudentByIndex(i));
+        }
+
+        int k = another_group.StudentsCount();
+        for (int i = 0; i < k; i++)
+        {
+            another_group.RemoveStudentWithMinHomeworkAverage();
+        }
+    }
+
+    void MergeWithGroup(Group& another_group)
     {
         for (int i = 0; i < another_group.StudentsCount(); i++)
         {
@@ -682,14 +747,6 @@ public:
             students_count--;
         }
     }
-
-
-
-
-
-
-
-
 
 };
 
